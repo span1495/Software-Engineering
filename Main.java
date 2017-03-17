@@ -10,6 +10,7 @@ public class Main {
 	        	String s ="";
 	        	String re="";
 	        	String []temp;
+	        	String []  temp2;
 	        	File f1 = new File(args[1] + "/mygit.html");
 	        	
 	            BufferedWriter bw;
@@ -27,12 +28,30 @@ public class Main {
 			        bw.write("Lines : "+re+"<br>");
 			        bw.write("Branches : "+executeCommand("cmd /C git branch -ar | find /c /v \"\"",f)+"<br>");
 			        bw.write("Tags : "+executeCommand("cmd /C git tag -n | find /c /v \"\"",f)+"<br>");
-			        bw.write("Commits : "+executeCommand("cmd /C git log | find /c /v \"\"",f)+"<br>");
+			        String commits =executeCommand("git rev-list --all --count",f);
+			        commits=commits.replace("\n","");
+			        int com=Integer.valueOf(commits);
+			        bw.write("Commits : "+commits+"<br>");
 			        bw.write("Commiters : "+executeCommand("cmd /C git log --pretty=\"%an %ae%n%cn %ce\" | sort | uniq | wc -l",f)+"<br>");
-			        bw.write("Commits per Contributor : "+executeCommand("git shortlog -s -n --all",f));
 					bw.write("</fieldset>");
-					bw.write("</form>");		 
-					 
+					bw.write("</form></br>");
+					re=executeCommand("git shortlog -s -n --all",f);
+					re=re.replaceAll(" ","");
+					
+					temp=re.split("\n");
+					bw.write("<table border=\"1\">");
+					bw.write("<tr><th>Name</th><th>Percentage</th></tr>");
+					for(int i=0;i<temp.length;i++)
+					{
+						temp2=temp[i].split("\t");
+						bw.write("<tr><td>"+temp2[1]+"</td>");
+						bw.write("<td>");
+						String myf = String.format("%.02f", Float.valueOf(temp2[0])*100/com);
+					    bw.write(myf);
+					    bw.write("%</td></tr>");
+						
+					}
+					bw.write("</table>");
 					 bw.write("</body>");
 					 bw.write("</html>");
 					 bw.close();
