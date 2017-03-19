@@ -48,7 +48,7 @@ public class Main {
 						bw.write("<td>");
 						String myf = String.format("%.02f", Float.valueOf(temp2[0])*100/com);
 					    bw.write(myf);
-					    bw.write("%</td></tr>");
+					    bw.write("%</td></tr> ");
 						
 					}
 					bw.write("</table>");
