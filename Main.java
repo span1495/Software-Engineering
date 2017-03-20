@@ -5,15 +5,29 @@ public class Main {
 
 	public static void main(String[] args) {
 	            
-	        	System.out.println(args[0]+"\n"+args[1]);
 	        	File f = new File(args[0]);
 	        	String s ="";
 	        	String re="";
+	        	String re2="";
+	        	String re3="";
 	        	String []temp;
-	        	String []  temp2;
+	        	String []temp2;
+	        	String []temp3;
+	        	String []temp4;
+	        	String []temp5;
 	        	File f1 = new File(args[1] + "/mygit.html");
-	        	
-	            BufferedWriter bw;
+	            BufferedWriter bw,bw2;
+	            File myDir = new File(args[1], "userReports");
+	            if (!myDir.exists()) {
+	                System.out.println("creating directory: " + myDir.getName());
+	                boolean result = false;
+	                myDir.mkdir();
+	                result = true;          
+	                if(result) {    
+	                    System.out.println("DIR created");  
+	                }
+	            }
+	     
 				try {
 					bw = new BufferedWriter(new FileWriter(f1));
 					bw.write("<html>");
@@ -25,7 +39,7 @@ public class Main {
 					bw.write("Files : " + executeCommand("cmd /C git ls-files | find /c /v \"\"",f) +"<br>");
 					s= executeCommand("git diff --shortstat 4b825dc642cb6eb9a060e54bf8d69288fbee4904 ",f);	
 			        re=findLines(s);
-			        System.out.println(re);
+			        
 			        bw.write("Lines : "+re+"<br>");
 			        bw.write("Branches : "+executeCommand("cmd /C git branch -ar | wc -l",f)+"<br>");
 			        bw.write("Tags : "+executeCommand("cmd /C git tag -n | find /c /v \"\"",f)+"<br>");
@@ -60,13 +74,48 @@ public class Main {
 					for(String t : temp )
 					{
 						t=t.replace("*","");
-						bw.write("<td><a target=\"_blank\" href="+args[1]+"\\"+t+".html>" + t+ "</a></td>");
-						bw.write("<td>"+1+"</td>");
-						bw.write("<td>"+2+"</td>");
+						t=t.replace("\n","");				
+						re=executeCommand("cmd /C git log "+ t + "|grep Date ",f);
+						bw.write("<td><a target=\"_blank\" href="+args[1]+"\\userReports\\"+t+".html>" + t+ "</a></td>");
+						temp2=re.split("\n");
+						temp2[0]=temp2[0].replace("Date:","");
+						temp2[0]=temp2[0].substring(0,(temp2[0].length())-5);
+						temp2[temp2.length-1]=temp2[temp2.length-1].replace("Date:","");
+						temp2[temp2.length-1]=temp2[temp2.length-1].substring(0,(temp2[temp2.length-1].length())-5);
+						bw.write("<td>"+temp2[temp2.length-1]+"</td>");
+						bw.write("<td>"+temp2[0]+"</td>");
 						bw.write("</tr>");
+						File f2 = new File(args[1]+"/userReports/"+t+".html");
+						bw2 = new BufferedWriter(new FileWriter(f2));
+						bw2.write("<html>");
+						bw2.write("<head><title>"+t+"</title></head>");
+						bw2.write("<b>Branch : "+ t+"</b>");
+						bw2.write("<table border=\"1\">");
+						bw2.write("<tr><th>Id</th><th>Message</th><th>Date</th><th>Commiter</th></tr>");
+						re=executeCommand("git log "+t +" --oneline",f);
+						re2=executeCommand("cmd /C git log "+t +" --date=format:%Y-%m-%d | grep Date:",f);
+						re3=executeCommand("cmd /C git log "+t +" | grep Author:",f);
+						temp2=re2.split("\n");
+						temp3=re3.split("\n");
+						temp4=re.split("\n");
+						for(int i=0;i<temp3.length;i++)
+						{
+							temp5=temp4[i].split(" ");
+							bw2.write("<tr><td>"+temp5[0]+"</td>");
+							bw2.write("<td>"+temp5[1]+"</td>");
+							temp5=temp2[i].split(":");
+							bw2.write("<td>"+temp5[1]+"</td>");
+							temp5=temp3[i].split(":");
+							bw2.write("<td>"+temp5[1]+"</td>");
+							bw2.write("</tr>");
+						}
+						bw2.write("</br></br>");
+						bw2.write("</html>");
+						bw2.close();
+				
 					}
 					
-					bw.write("</table>");
+					 bw.write("</table>");
 					 bw.write("</body>");
 					 bw.write("</html>");
 					 bw.close();
@@ -74,13 +123,8 @@ public class Main {
 					e.printStackTrace();
 				}
 				
-	        	/*
-	        	 * 
-	        	 * 
-	        	 * 
-	        	 * 
-	        	 * 
-	        	 * 
+	        	 
+	 
 	        	s=executeCommand("git for-each-ref --sort=-committerdate refs/heads/",f);
 	        
 	        	String[] parts =s.split("\n");
@@ -89,7 +133,7 @@ public class Main {
 	        		temp=part.split(" ");
 	        		System.out.println(temp[0]);
 	        	}
-	            System.exit(0);	*/
+	            System.exit(0);	
 	    }
 	
 	private static String executeCommand(String command,File f) {
@@ -99,15 +143,14 @@ public class Main {
 		Process p;
 		try {
 			p = Runtime.getRuntime().exec(command,null,f);
-			p.waitFor();
+
 			BufferedReader reader =new BufferedReader(new InputStreamReader(p.getInputStream()));
 
 			String line = "";
-			
 			while ((line = reader.readLine())!= null) {
 				output.append(line + "\n");
 			}
-
+			p.waitFor();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
