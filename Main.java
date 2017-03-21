@@ -5,7 +5,7 @@ public class Main {
 
 	public static void main(String[] args) {
 	            
-	        	File f = new File(args[0]);
+	        	File f = new File(args[2]);
 	        	String s ="";
 	        	String re="";
 	        	String re2="";
@@ -39,7 +39,7 @@ public class Main {
 					bw.write("Files : " + executeCommand("cmd /C git ls-files | find /c /v \"\"",f) +"<br>");
 					s= executeCommand("git diff --shortstat 4b825dc642cb6eb9a060e54bf8d69288fbee4904 ",f);	
 			        re=findLines(s);
-			        
+			        //git log --shortstat --author span1495 --since "1 weeks ago" | grep "files changed"
 			        bw.write("Lines : "+re+"<br>");
 			        bw.write("Branches : "+executeCommand("cmd /C git branch -ar | wc -l",f)+"<br>");
 			        bw.write("Tags : "+executeCommand("cmd /C git tag -n | find /c /v \"\"",f)+"<br>");
@@ -85,13 +85,15 @@ public class Main {
 						bw.write("<td>"+temp2[temp2.length-1]+"</td>");
 						bw.write("<td>"+temp2[0]+"</td>");
 						bw.write("</tr>");
+						
+						//-----------------------BRANCHES---------------------------//
 						File f2 = new File(args[1]+"/userReports/"+t+".html");
 						bw2 = new BufferedWriter(new FileWriter(f2));
 						bw2.write("<html>");
 						bw2.write("<head><title>"+t+"</title></head>");
 						bw2.write("<b>Branch : "+ t+"</b>");
 						bw2.write("<table border=\"1\">");
-						bw2.write("<tr><th>Id</th><th>Message</th><th>Date</th><th>Commiter</th></tr>");
+						bw2.write("<tr><th>Id</th><th>Message</th><th>Date</th><th>Commiter</th><th>Tags</th></tr>");
 						re=executeCommand("git log "+t +" --oneline",f);
 						re2=executeCommand("cmd /C git log "+t +" --date=format:%Y-%m-%d | grep Date:",f);
 						re3=executeCommand("cmd /C git log "+t +" | grep Author:",f);
@@ -102,11 +104,16 @@ public class Main {
 						{
 							temp5=temp4[i].split(" ");
 							bw2.write("<tr><td>"+temp5[0]+"</td>");
+							re=temp5[0];
 							bw2.write("<td>"+temp5[1]+"</td>");
 							temp5=temp2[i].split(":");
 							bw2.write("<td>"+temp5[1]+"</td>");
 							temp5=temp3[i].split(":");
 							bw2.write("<td>"+temp5[1]+"</td>");
+							
+							System.out.println(temp5[0]);
+							re=executeCommand("git tag --contains "+re,f);
+							bw2.write("<td>"+re+"</td>");
 							bw2.write("</tr>");
 						}
 						bw2.write("</br></br>");
@@ -123,16 +130,7 @@ public class Main {
 					e.printStackTrace();
 				}
 				
-	        	 
-	 
-	        	s=executeCommand("git for-each-ref --sort=-committerdate refs/heads/",f);
-	        
-	        	String[] parts =s.split("\n");
-	        	for(String part : parts)
-	        	{
-	        		temp=part.split(" ");
-	        		System.out.println(temp[0]);
-	        	}
+
 	            System.exit(0);	
 	    }
 	
