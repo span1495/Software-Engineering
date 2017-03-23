@@ -5,7 +5,7 @@ public class Main {
 
 	public static void main(String[] args) {
 	            
-	        	File f = new File(args[2]);
+	        	File f = new File(args[0]);
 	        	String s ="";
 	        	String re="";
 	        	String re2="";
@@ -32,8 +32,8 @@ public class Main {
 					bw = new BufferedWriter(new FileWriter(f1));
 					bw.write("<html>");
 					bw.write("<head><title>GitReport</title></head>");
-					bw.write("</br></br>");
-					bw.write("<body style=\"background-color:#F5FAFA\"");
+					bw.write("</br></br><link rel=\"stylesheet\" href=\""+args[0]+"/my.css\">");
+					bw.write("<body>");
 					bw.write("<form><fieldset style=\"background-color:#87cefa\">");
 					bw.write("<legend><b>Results</b></legend>");
 					bw.write("Files : " + executeCommand("cmd /C git ls-files | find /c /v \"\"",f) +"<br>");
@@ -70,13 +70,13 @@ public class Main {
 					re=re.replaceAll(" ","");
 					temp=re.split("\n");
 					bw.write("<table border=\"1\">");
-					bw.write("<tr><th>Branch</th><th>Date of creation</th><th>Last Modifaction</th></tr>");
+					bw.write("<tr><th>Branch</th><th>Date of creation</th><th>Last Modifaction</th><th>Percentage %</th></tr>");
 					for(String t : temp )
 					{
 						t=t.replace("*","");
 						t=t.replace("\n","");				
 						re=executeCommand("cmd /C git log "+ t + "|grep Date ",f);
-						bw.write("<td><a target=\"_blank\" href="+args[1]+"\\userReports\\"+t+".html>" + t+ "</a></td>");
+						bw.write("<td><b><a target=\"_blank\" href="+args[1]+"\\userReports\\"+t+".html>" + t+ "</a></b></td>");
 						temp2=re.split("\n");
 						temp2[0]=temp2[0].replace("Date:","");
 						temp2[0]=temp2[0].substring(0,(temp2[0].length())-5);
@@ -84,15 +84,19 @@ public class Main {
 						temp2[temp2.length-1]=temp2[temp2.length-1].substring(0,(temp2[temp2.length-1].length())-5);
 						bw.write("<td>"+temp2[temp2.length-1]+"</td>");
 						bw.write("<td>"+temp2[0]+"</td>");
+						re=executeCommand("cmd /C git log "+ t + "|grep Date: |wc -l ",f);
+						String myf = String.format("%.02f", Float.valueOf(re)*100/com);
+						bw.write("<td>"+myf+" %</td>");
 						bw.write("</tr>");
 						
 						//-----------------------BRANCHES---------------------------//
 						File f2 = new File(args[1]+"/userReports/"+t+".html");
 						bw2 = new BufferedWriter(new FileWriter(f2));
 						bw2.write("<html>");
-						bw2.write("<head><title>"+t+"</title></head>");
-						bw2.write("<b>Branch : "+ t+"</b>");
-						bw2.write("<table border=\"1\">");
+						bw2.write("<head><title>"+t+"</title></head><link rel=\"stylesheet\" href=\""+args[0]+"/my.css\">");
+						bw2.write("<body>");
+						bw2.write("<div class=\"flex-container\"><header>Branch : "+ t+"</header></div>");
+						bw2.write("<table border=\"1\"");
 						bw2.write("<tr><th>Id</th><th>Message</th><th>Date</th><th>Commiter</th><th>Tags</th></tr>");
 						re=executeCommand("git log "+t +" --oneline",f);
 						re2=executeCommand("cmd /C git log "+t +" --date=format:%Y-%m-%d | grep Date:",f);
@@ -111,12 +115,12 @@ public class Main {
 							temp5=temp3[i].split(":");
 							bw2.write("<td>"+temp5[1]+"</td>");
 							
-							System.out.println(temp5[0]);
 							re=executeCommand("git tag --contains "+re,f);
 							bw2.write("<td>"+re+"</td>");
 							bw2.write("</tr>");
 						}
 						bw2.write("</br></br>");
+						bw2.write("</body");
 						bw2.write("</html>");
 						bw2.close();
 				
