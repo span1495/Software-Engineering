@@ -36,7 +36,7 @@ public class Main {
 					bw = new BufferedWriter(new FileWriter(f1));
 					bw.write("<html>");
 					bw.write("<head><title>GitReport</title></head>");
-					bw.write("</br></br><link rel=\"stylesheet\" href=\""+args[0]+"/my.css\">");
+					bw.write("</br></br><link rel=\"stylesheet\" href=\"my.css\">");
 					bw.write("<body>");
 					bw.write("<form><fieldset style=\"background-color:#87cefa\">");
 					bw.write("<legend><b>Results</b></legend>");
@@ -65,7 +65,7 @@ public class Main {
 						t=t.replace("\n","");				
 						re=executeCommand("cmd /C git log "+ t + "|grep Date ",f);
 						branches.add(t);
-						bw.write("<td><b><a target=\"_blank\" href="+args[1]+"\\userReports\\"+t+".html>" + t+ "</a></b></td>");
+						bw.write("<td><b><a target=\"_blank\" href=\"userReports\\"+t+".html\">"+ t+ "</a></b></td>");
 						temp2=re.split("\n");
 						temp2[0]=temp2[0].replace("Date:","");
 						temp2[0]=temp2[0].substring(0,(temp2[0].length())-5);
@@ -82,7 +82,7 @@ public class Main {
 						File f2 = new File(args[1]+"/userReports/"+t+".html");
 						bw2 = new BufferedWriter(new FileWriter(f2));
 						bw2.write("<html>");
-						bw2.write("<head><title>"+t+"</title></head><link rel=\"stylesheet\" href=\""+args[0]+"/my.css\">");
+						bw2.write("<head><title>"+t+"</title></head><link rel=\"stylesheet\" href=\"../my.css\">");
 						bw2.write("<body>");
 						bw2.write("<div class=\"flex-container\"><header>Branch : "+ t+"</header></div>");
 						bw2.write("<table border=\"1\"");
