@@ -1,5 +1,7 @@
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Main {
 
@@ -12,6 +14,8 @@ public class Main {
 	        	String re3="";
 	        	String []temp;
 	        	String []temp2;
+	        	List<String> branches = new ArrayList<String>();
+	        	List<String> branch_count = new ArrayList<String>();
 	        	String []temp3;
 	        	String []temp4;
 	        	String []temp5;
@@ -50,22 +54,6 @@ public class Main {
 			        bw.write("Commiters : "+executeCommand("cmd /C git log --pretty=\"%an %ae%n%cn %ce\" | sort | uniq | wc -l",f)+"<br>");
 					bw.write("</fieldset>");
 					bw.write("</form></br>");
-					re=executeCommand("git shortlog -s -n --all",f);
-					re=re.replaceAll(" ","");					
-					temp=re.split("\n");
-					bw.write("<table border=\"1\">");
-					bw.write("<tr><th>Name</th><th>Percentage</th></tr>");
-					for(int i=0;i<temp.length;i++)
-					{
-						temp2=temp[i].split("\t");
-						bw.write("<tr><td>"+temp2[1]+"</td>");
-						bw.write("<td>");
-						String myf = String.format("%.02f", Float.valueOf(temp2[0])*100/com);
-					    bw.write(myf);
-					    bw.write("%</td></tr>");
-						
-					}
-					bw.write("</table></br>");
 					re=executeCommand("git branch",f);
 					re=re.replaceAll(" ","");
 					temp=re.split("\n");
@@ -76,6 +64,7 @@ public class Main {
 						t=t.replace("*","");
 						t=t.replace("\n","");				
 						re=executeCommand("cmd /C git log "+ t + "|grep Date ",f);
+						branches.add(t);
 						bw.write("<td><b><a target=\"_blank\" href="+args[1]+"\\userReports\\"+t+".html>" + t+ "</a></b></td>");
 						temp2=re.split("\n");
 						temp2[0]=temp2[0].replace("Date:","");
@@ -125,11 +114,53 @@ public class Main {
 						bw2.close();
 				
 					}
+					bw.write("</table></br></br>");
 					
-					 bw.write("</table>");
-					 bw.write("</body>");
-					 bw.write("</html>");
-					 bw.close();
+					for(int i=0;i<branches.size();i++)
+					{
+						
+						re=executeCommand("cmd /C git log "+branches.get(i)+" --oneline |wc -l",f);
+						re=re.replace("\n","");
+						branch_count.add(re);
+					}
+					
+					re=executeCommand("git shortlog -s -n --all",f);
+					re=re.replaceAll(" ","");					
+					temp=re.split("\n");
+					bw.write("<table border=\"1\">");
+					bw.write("<tr><th>Contributor : Name</th><th>Total Percentage</th>");
+					for(int i=0;i<branches.size();i++)
+					{
+						bw.write("<th>"+branches.get(i)+"</th>");
+					}
+					bw.write("</tr>");
+					for(int i=0;i<temp.length;i++)
+					{
+						temp2=temp[i].split("\t");
+						bw.write("<tr><td>"+temp2[1]+"</td>");
+						bw.write("<td>");
+						String myf = String.format("%.02f", Float.valueOf(temp2[0])*100/com);
+						bw.write(myf);
+					    bw.write("%</td>");
+						for(int j=0;j<branches.size();j++)
+						{	
+							//System.out.println(branches.get(j)+" "+temp2[1]);
+							re2=executeCommand("cmd /C git log "+branches.get(j)+" | grep \"Author: "+temp2[1]+"\" |wc -l",f);
+							bw.write("<td>");
+							
+							int current=Integer.valueOf(branch_count.get(j));
+							System.out.println(re2+" "+current);
+							myf = String.format("%.02f", Float.valueOf(re2)*100/current);
+							bw.write(myf);
+						    bw.write("%</td>");
+						}
+						
+						bw.write("</tr>");
+					}
+					bw.write("</table></br>");
+					bw.write("</body>");
+					bw.write("</html>");
+					bw.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
