@@ -1,13 +1,18 @@
 import java.io.*;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws ParseException {
 	            
-	        	File f = new File(args[0]);
+	        	File f = new File(args[2]);
 	        	String s ="";
 	        	String re="";
 	        	String re2="";
@@ -16,6 +21,7 @@ public class Main {
 	        	String []temp2;
 	        	List<String> branches = new ArrayList<String>();
 	        	List<String> branch_count = new ArrayList<String>();
+	        	List<String> users = new ArrayList<String>();
 	        	String []temp3;
 	        	String []temp4;
 	        	String []temp5;
@@ -138,13 +144,14 @@ public class Main {
 					{
 						temp2=temp[i].split("\t");
 						bw.write("<tr><td>"+temp2[1]+"</td>");
+						users.add(temp2[1]);
 						bw.write("<td>");
 						String myf = String.format("%.02f", Float.valueOf(temp2[0])*100/com);
 						bw.write(myf);
 					    bw.write("%</td>");
 						for(int j=0;j<branches.size();j++)
 						{	
-							//System.out.println(branches.get(j)+" "+temp2[1]);
+							
 							re2=executeCommand("cmd /C git log "+branches.get(j)+" | grep \"Author: "+temp2[1]+"\" |wc -l",f);
 							bw.write("<td>");
 							
@@ -157,6 +164,52 @@ public class Main {
 						
 						bw.write("</tr>");
 					}
+					bw.write("</table></br>");
+					
+					String last_day="";
+					String first_day="";
+					bw.write("<table border=\"1\">");
+					bw.write("<tr><th>Contributor : Name</th><th>Commit Per Day</th><th>Commit Per Week</th><th>Commit Per Month</th></tr>");
+					for(int i=0;i<users.size();i++)	
+					{
+						re=executeCommand("cmd /C git log --author="+users.get(i)+" | grep Date | awk '{print \" : \"$4\" \"$3\" \"$6}' | uniq -c",f);
+						temp=re.split("\n");
+						int sinolo=0;
+						for(int j=0;j<temp.length;j++)
+						{
+							
+							temp2=temp[j].split(":");
+							if(j==0)
+								last_day=temp2[1];
+							if(j==temp.length-1)
+								first_day=temp2[1];
+							temp2[0]=temp2[0].replace(" ","");
+							int imeras_count=Integer.valueOf(temp2[0]);
+							sinolo+=imeras_count;
+						}
+						DateFormat format = new SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH);
+						
+						temp3=last_day.split(" ");
+						String string = temp3[2]+" "+temp3[1]+", "+temp3[3];
+						
+						temp3=first_day.split(" ");
+						String string2 = temp3[2]+" "+temp3[1]+", "+temp3[3];
+					
+						Date date = format.parse(string);
+						Date date2 = format.parse(string2);	
+						long diff = date.getTime() - date2.getTime();
+						int days=(int)TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
+						int weeks=(days/7)+1;
+						int months=(days/30)+1;
+						float percent=Float.valueOf(sinolo)/days;
+						bw.write("<tr><td>"+users.get(i)+"</td>");
+						bw.write("<td>"+percent+"</td>");
+						percent=Float.valueOf(sinolo)/weeks;
+						bw.write("<td>"+percent+"</td>");
+						percent=Float.valueOf(sinolo)/months;
+						bw.write("<td>"+percent+"</td></tr>");
+					}
+					
 					bw.write("</table></br>");
 					bw.write("</body>");
 					bw.write("</html>");
