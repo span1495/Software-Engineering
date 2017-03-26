@@ -12,19 +12,19 @@ public class Main {
 
 	public static void main(String[] args) throws ParseException {
 	            
-	        	File f = new File(args[2]);
+	        	File f = new File(args[0]);
 	        	String s ="";
 	        	String re="";
 	        	String re2="";
 	        	String re3="";
 	        	String []temp;
 	        	String []temp2;
-	        	List<String> branches = new ArrayList<String>();
-	        	List<String> branch_count = new ArrayList<String>();
-	        	List<String> users = new ArrayList<String>();
 	        	String []temp3;
 	        	String []temp4;
 	        	String []temp5;
+	        	List<String> branches = new ArrayList<String>();
+	        	List<String> branch_count = new ArrayList<String>();
+	        	List<String> users = new ArrayList<String>();
 	        	File f1 = new File(args[1] + "/mygit.html");
 	            BufferedWriter bw,bw2;
 	            File myDir = new File(args[1], "userReports");
@@ -49,7 +49,6 @@ public class Main {
 					bw.write("Files : " + executeCommand("cmd /C git ls-files | find /c /v \"\"",f) +"<br>");
 					s= executeCommand("git diff --shortstat 4b825dc642cb6eb9a060e54bf8d69288fbee4904 ",f);	
 			        re=findLines(s);
-			        //git log --shortstat --author span1495 --since "1 weeks ago" | grep "files changed"
 			        bw.write("Lines : "+re+"<br>");
 			        bw.write("Branches : "+executeCommand("cmd /C git branch -ar | wc -l",f)+"<br>");
 			        bw.write("Tags : "+executeCommand("cmd /C git tag -n | find /c /v \"\"",f)+"<br>");
@@ -118,13 +117,11 @@ public class Main {
 						bw2.write("</body");
 						bw2.write("</html>");
 						bw2.close();
-				
 					}
 					bw.write("</table></br></br>");
 					
 					for(int i=0;i<branches.size();i++)
 					{
-						
 						re=executeCommand("cmd /C git log "+branches.get(i)+" --oneline |wc -l",f);
 						re=re.replace("\n","");
 						branch_count.add(re);
@@ -151,17 +148,13 @@ public class Main {
 					    bw.write("%</td>");
 						for(int j=0;j<branches.size();j++)
 						{	
-							
 							re2=executeCommand("cmd /C git log "+branches.get(j)+" | grep \"Author: "+temp2[1]+"\" |wc -l",f);
 							bw.write("<td>");
-							
 							int current=Integer.valueOf(branch_count.get(j));
-							System.out.println(re2+" "+current);
 							myf = String.format("%.02f", Float.valueOf(re2)*100/current);
 							bw.write(myf);
 						    bw.write("%</td>");
 						}
-						
 						bw.write("</tr>");
 					}
 					bw.write("</table></br>");
@@ -211,6 +204,28 @@ public class Main {
 					}
 					
 					bw.write("</table></br>");
+					int sinolo_add=0;
+					int sinolo_rem=0;
+					int sinolo_upd=0;
+					for(int i=0;i<users.size();i++)
+					{
+						re=executeCommand("cmd /C git log --author=\""+users.get(i) +"\" --pretty=tformat: --numstat",f);
+						temp=re.split("\t");
+						int add=Integer.valueOf(temp[0]);
+						int remove=Integer.valueOf(temp[1]);
+						sinolo_add+=add;
+						sinolo_rem+=remove;
+						sinolo_upd+=Math.abs(add-remove);		
+					}
+					bw.write("<table border=\"1\">");
+					bw.write("<tr><th>Added Lines Per Contributor</th><th>Removed Lined  Per Contributor</th><th>Updated Lines  Per Contributor</th></tr>");
+					int siz=users.size();
+					bw.write("<td>"+sinolo_add/siz+"</td>");
+					bw.write("<td>"+sinolo_rem/siz+"</td>");
+					
+					bw.write("<td>"+sinolo_upd/siz+"</td>");
+					bw.write("</tr>");
+					bw.write("</table></br>");
 					bw.write("</body>");
 					bw.write("</html>");
 					bw.close();
@@ -218,7 +233,6 @@ public class Main {
 					e.printStackTrace();
 				}
 				
-
 	            System.exit(0);	
 	    }
 	
