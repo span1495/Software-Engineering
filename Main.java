@@ -12,19 +12,21 @@ public class Main {
 
 	public static void main(String[] args) throws ParseException {
 	            
-	        	File f = new File(args[0]);
+	        	File f = new File(args[2]);
 	        	String s ="";
 	        	String re="";
 	        	String re2="";
-	        	String re3="";
 	        	String []temp;
 	        	String []temp2;
 	        	String []temp3;
 	        	String []temp4;
 	        	String []temp5;
+	        	int count=0;
 	        	List<String> branches = new ArrayList<String>();
 	        	List<String> branch_count = new ArrayList<String>();
 	        	List<String> users = new ArrayList<String>();
+	        	List<String> dates = new ArrayList<String>();
+	        	List<String> authors = new ArrayList<String>();
 	        	File f1 = new File(args[1] + "/mygit.html");
 	            BufferedWriter bw,bw2;
 	            File myDir = new File(args[1], "userReports");
@@ -46,17 +48,21 @@ public class Main {
 					bw.write("<body>");
 					bw.write("<form><fieldset style=\"background-color:#87cefa\">");
 					bw.write("<legend><b>Results</b></legend>");
-					bw.write("Files : " + executeCommand("cmd /C git ls-files | find /c /v \"\"",f) +"<br>");
-					s= executeCommand("git diff --shortstat 4b825dc642cb6eb9a060e54bf8d69288fbee4904 ",f);	
+					count=countResults("git ls-files",f);
+					bw.write("Files : " + count +"<br>");
+					s= executeCommand("git diff --shortstat 4b825dc642cb6eb9a060e54bf8d69288fbee4904",f);	
 			        re=findLines(s);
 			        bw.write("Lines : "+re+"<br>");
-			        bw.write("Branches : "+executeCommand("cmd /C git branch -ar | wc -l",f)+"<br>");
-			        bw.write("Tags : "+executeCommand("cmd /C git tag -n | find /c /v \"\"",f)+"<br>");
+			        count=countResults("git branch -ar",f);
+			        bw.write("Branches : "+(count-1)+"<br>");
+			        count=countResults("git tag -n",f);
+			        bw.write("Tags : "+count+"<br>");
 			        String commits =executeCommand("git rev-list --all --count",f);
 			        commits=commits.replace("\n","");
 			        int com=Integer.valueOf(commits);
 			        bw.write("Commits : "+commits+"<br>");
-			        bw.write("Commiters : "+executeCommand("cmd /C git log --pretty=\"%an %ae%n%cn %ce\" | sort | uniq | wc -l",f)+"<br>");
+			        count=countResults("git shortlog -sn --all",f);
+			        bw.write("Commiters : "+count+"<br>");
 					bw.write("</fieldset>");
 					bw.write("</form></br>");
 					re=executeCommand("git branch",f);
@@ -65,21 +71,36 @@ public class Main {
 					bw.write("<table border=\"1\">");
 					bw.write("<tr><th>Branch</th><th>Date of creation</th><th>Last Modifaction</th><th>Percentage %</th></tr>");
 					for(String t : temp )
-					{
+					{	
 						t=t.replace("*","");
 						t=t.replace("\n","");				
-						re=executeCommand("cmd /C git log "+ t + "|grep Date ",f);
+						re=executeCommand("git log "+ t,f);
+						temp2=re.split("\n");
+						int counter=0;
+						for(int i=0;i<temp2.length;i++)
+						{
+							if(temp2[i].contains("Date"))
+								counter++;
+						}
 						branches.add(t);
 						bw.write("<td><b><a target=\"_blank\" href=\"userReports\\"+t+".html\">"+ t+ "</a></b></td>");
-						temp2=re.split("\n");
-						temp2[0]=temp2[0].replace("Date:","");
-						temp2[0]=temp2[0].substring(0,(temp2[0].length())-5);
-						temp2[temp2.length-1]=temp2[temp2.length-1].replace("Date:","");
-						temp2[temp2.length-1]=temp2[temp2.length-1].substring(0,(temp2[temp2.length-1].length())-5);
-						bw.write("<td>"+temp2[temp2.length-1]+"</td>");
-						bw.write("<td>"+temp2[0]+"</td>");
-						re=executeCommand("cmd /C git log "+ t + "|grep Date: |wc -l ",f);
-						String myf = String.format("%.02f", Float.valueOf(re)*100/com);
+						temp2[2]=temp2[2].replace("Date:","");
+						temp2[2]=temp2[2].substring(0,(temp2[2].length())-5);
+						int place=0;
+						for(int j=temp2.length-1;j>0;j--)
+						{
+							if(temp2[j].contains("Date"))
+							{
+								place=j;
+								break;
+							}
+						}
+						temp2[place]=temp2[place].replace("Date:","");
+						temp2[place]=temp2[place].substring(0,(temp2[place].length())-5);
+						bw.write("<td>"+temp2[place]+"</td>");
+						
+						bw.write("<td>"+temp2[2]+"</td>");
+						String myf = String.format("%.02f", Float.valueOf(counter)*100/com);
 						bw.write("<td>"+myf+" %</td>");
 						bw.write("</tr>");
 						
@@ -93,20 +114,28 @@ public class Main {
 						bw2.write("<table border=\"1\"");
 						bw2.write("<tr><th>Id</th><th>Message</th><th>Date</th><th>Commiter</th><th>Tags</th></tr>");
 						re=executeCommand("git log "+t +" --oneline",f);
-						re2=executeCommand("cmd /C git log "+t +" --date=format:%Y-%m-%d | grep Date:",f);
-						re3=executeCommand("cmd /C git log "+t +" | grep Author:",f);
+						re2=executeCommand("git log "+t +" --date=format:%Y-%m-%d",f);
 						temp2=re2.split("\n");
-						temp3=re3.split("\n");
 						temp4=re.split("\n");
-						for(int i=0;i<temp3.length;i++)
+						dates=new ArrayList<String>();
+						authors=new ArrayList<String>();
+						for(int j=0;j<temp2.length;j++)
+						{
+							if(temp2[j].contains("Date:"))
+								dates.add(temp2[j]);
+							if(temp2[j].contains("Author:"))
+								authors.add(temp2[j]);	
+						}
+						
+						for(int i=0;i<authors.size();i++)
 						{
 							temp5=temp4[i].split(" ");
 							bw2.write("<tr><td>"+temp5[0]+"</td>");
 							re=temp5[0];
 							bw2.write("<td>"+temp5[1]+"</td>");
-							temp5=temp2[i].split(":");
+							temp5=dates.get(i).split(":");
 							bw2.write("<td>"+temp5[1]+"</td>");
-							temp5=temp3[i].split(":");
+							temp5=authors.get(i).split(":");
 							bw2.write("<td>"+temp5[1]+"</td>");
 							
 							re=executeCommand("git tag --contains "+re,f);
@@ -122,9 +151,8 @@ public class Main {
 					
 					for(int i=0;i<branches.size();i++)
 					{
-						re=executeCommand("cmd /C git log "+branches.get(i)+" --oneline |wc -l",f);
-						re=re.replace("\n","");
-						branch_count.add(re);
+						count=countResults("git log "+branches.get(i)+" --oneline",f);
+						branch_count.add(String.valueOf(count));
 					}
 					
 					re=executeCommand("git shortlog -s -n --all",f);
@@ -148,10 +176,23 @@ public class Main {
 					    bw.write("%</td>");
 						for(int j=0;j<branches.size();j++)
 						{	
-							re2=executeCommand("cmd /C git log "+branches.get(j)+" | grep \"Author: "+temp2[1]+"\" |wc -l",f);
+							re2=executeCommand("cmd /C git log "+branches.get(j),f);
+							temp3=re2.split("\n");
+							int count2=0;
+							int current=0;
+							for(int w=0;w<temp3.length;w++)
+							{
+								if(temp3[w].contains("Author:"))
+								{
+									count2++;
+									if(temp3[w].contains(temp2[1]))	
+										current++;
+								}
+								
+								
+							}
 							bw.write("<td>");
-							int current=Integer.valueOf(branch_count.get(j));
-							myf = String.format("%.02f", Float.valueOf(re2)*100/current);
+							myf = String.format("%.02f", Float.valueOf(current)*100/count2);
 							bw.write(myf);
 						    bw.write("%</td>");
 						}
@@ -165,31 +206,34 @@ public class Main {
 					bw.write("<tr><th>Contributor : Name</th><th>Commit Per Day</th><th>Commit Per Week</th><th>Commit Per Month</th></tr>");
 					for(int i=0;i<users.size();i++)	
 					{
-						re=executeCommand("cmd /C git log --author="+users.get(i)+" | grep Date | awk '{print \" : \"$4\" \"$3\" \"$6}' | uniq -c",f);
+						re=executeCommand("git log --author="+users.get(i),f);
+						dates=new ArrayList<String>();
 						temp=re.split("\n");
 						int sinolo=0;
 						for(int j=0;j<temp.length;j++)
 						{
-							
-							temp2=temp[j].split(":");
-							if(j==0)
-								last_day=temp2[1];
-							if(j==temp.length-1)
-								first_day=temp2[1];
-							temp2[0]=temp2[0].replace(" ","");
-							int imeras_count=Integer.valueOf(temp2[0]);
-							sinolo+=imeras_count;
+							if(temp[j].contains("Date:"))
+							{
+								sinolo++;
+								if(j==2)
+								{
+									
+									temp2=temp[j].split(" ");
+									last_day=temp2[4]+" "+temp2[5]+", "+temp2[7];
+								}
+								if(j==temp.length-3 ||j==temp.length-4 || j==temp.length-5 )
+								{
+									
+									temp2=temp[j].split(" ");
+									first_day=temp2[4]+" "+temp2[5]+", "+temp2[7];
+								}
+							}
 						}
 						DateFormat format = new SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH);
-						
-						temp3=last_day.split(" ");
-						String string = temp3[2]+" "+temp3[1]+", "+temp3[3];
-						
-						temp3=first_day.split(" ");
-						String string2 = temp3[2]+" "+temp3[1]+", "+temp3[3];
 					
-						Date date = format.parse(string);
-						Date date2 = format.parse(string2);	
+						System.out.println(first_day);
+						Date date = format.parse(last_day);
+						Date date2 = format.parse(first_day);	
 						long diff = date.getTime() - date2.getTime();
 						int days=(int)TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
 						int weeks=(days/7)+1;
@@ -209,7 +253,7 @@ public class Main {
 					int sinolo_upd=0;
 					for(int i=0;i<users.size();i++)
 					{
-						re=executeCommand("cmd /C git log --author=\""+users.get(i) +"\" --pretty=tformat: --numstat",f);
+						re=executeCommand("git log --author=\""+users.get(i) +"\" --pretty=tformat: --numstat",f);
 						temp=re.split("\t");
 						int add=Integer.valueOf(temp[0]);
 						int remove=Integer.valueOf(temp[1]);
@@ -236,6 +280,13 @@ public class Main {
 	            System.exit(0);	
 	    }
 	
+	private static Integer countResults(String command,File F)
+	{
+		String re=executeCommand(command,F);
+		String [] mytemp ;
+		mytemp=re.split("\n");
+		return mytemp.length;
+	}
 	private static String executeCommand(String command,File f) {
 
 		StringBuffer output = new StringBuffer();
