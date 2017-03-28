@@ -261,12 +261,20 @@ public class Main {
 					for(int i=0;i<users.size();i++)
 					{
 						re=executeCommand("git log --author=\""+users.get(i) +"\" --pretty=tformat: --numstat",f);
-						temp=re.split("\t");
-						int add=Integer.valueOf(temp[0]);
-						int remove=Integer.valueOf(temp[1]);
-						sinolo_add+=add;
-						sinolo_rem+=remove;
-						sinolo_upd+=Math.abs(add-remove);		
+						if(re.compareTo("")==0)
+							continue;
+						re=re.replaceAll("-","0");
+						temp=re.split("\n");
+						for(int j=0;j<temp.length;j++)
+						{
+							temp2=temp[j].split("\t");
+							
+							int add=Integer.valueOf(temp2[0]);
+							int remove=Integer.valueOf(temp2[1]);
+							sinolo_add+=add;
+							sinolo_rem+=remove;
+							sinolo_upd+=Math.abs(add-remove);		
+						}
 					}
 					bw.write("<table border=\"1\">");
 					bw.write("<tr><th>Added Lines Per Contributor</th><th>Removed Lined  Per Contributor</th><th>Updated Lines  Per Contributor</th></tr>");
