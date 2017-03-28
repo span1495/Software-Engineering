@@ -12,7 +12,7 @@ public class Main {
 
 	public static void main(String[] args) throws ParseException {
 	            
-	        	File f = new File(args[2]);
+	        	File f = new File(args[0]);
 	        	String s ="";
 	        	String re="";
 	        	String re2="";
@@ -47,7 +47,7 @@ public class Main {
 					bw.write("</br></br><link rel=\"stylesheet\" href=\"my.css\">");
 					bw.write("<body>");
 					bw.write("<form><fieldset style=\"background-color:#87cefa\">");
-					bw.write("<legend><b>Results</b></legend>");
+					bw.write("<legend><b>Results</b></legend><link rel=\"stylesheet\" href=\"../my.css\">");
 					count=countResults("git ls-files",f);
 					bw.write("Files : " + count +"<br>");
 					s= executeCommand("git diff --shortstat 4b825dc642cb6eb9a060e54bf8d69288fbee4904",f);	
