@@ -11,7 +11,11 @@ import java.util.concurrent.TimeUnit;
 public class Main {
 
 	public static void main(String[] args) throws ParseException {
-	            
+	            if(args.length<2)
+	            {
+	            	System.out.println("Wrong number of arguments given!");
+	            	System.exit(-1);
+	            }
 	        	File f = new File(args[0]);
 	        	String s ="";
 	        	String re="";
@@ -50,7 +54,7 @@ public class Main {
 					bw.write("<legend><b>Results</b></legend><link rel=\"stylesheet\" href=\"../my.css\">");
 					count=countResults("git ls-files",f);
 					bw.write("Files : " + count +"<br>");
-					s= executeCommand("git diff --shortstat 4b825dc642cb6eb9a060e54bf8d69288fbee4904",f);	
+					s= executeCommand("git diff --shortstat 4b825dc642cb6eb9a060e54bf8d69288fbee4904",f);
 			        re=findLines(s);
 			        bw.write("Lines : "+re+"<br>");
 			        count=countResults("git branch -ar",f);
@@ -70,11 +74,16 @@ public class Main {
 					temp=re.split("\n");
 					bw.write("<table border=\"1\">");
 					bw.write("<tr><th>Branch</th><th>Date of creation</th><th>Last Modifaction</th><th>Percentage %</th></tr>");
+					String previous="";
 					for(String t : temp )
 					{	
 						t=t.replace("*","");
-						t=t.replace("\n","");				
-						re=executeCommand("git log "+ t,f);
+						t=t.replace("\n","");
+						if(previous.compareTo("")==0)
+							re=executeCommand("git log "+ t,f);
+						else
+							re=executeCommand("git log "+ t+"..."+previous,f);
+						previous=t;
 						temp2=re.split("\n");
 						int counter=0;
 						for(int i=0;i<temp2.length;i++)
@@ -176,7 +185,7 @@ public class Main {
 					    bw.write("%</td>");
 						for(int j=0;j<branches.size();j++)
 						{	
-							re2=executeCommand("cmd /C git log "+branches.get(j),f);
+							re2=executeCommand("git log "+branches.get(j),f);
 							temp3=re2.split("\n");
 							int count2=0;
 							int current=0;
@@ -188,8 +197,6 @@ public class Main {
 									if(temp3[w].contains(temp2[1]))	
 										current++;
 								}
-								
-								
 							}
 							bw.write("<td>");
 							myf = String.format("%.02f", Float.valueOf(current)*100/count2);
@@ -217,7 +224,6 @@ public class Main {
 								sinolo++;
 								if(j==2)
 								{
-									
 									temp2=temp[j].split(" ");
 									last_day=temp2[4]+" "+temp2[5]+", "+temp2[7];
 								}
@@ -229,13 +235,14 @@ public class Main {
 								}
 							}
 						}
+						
 						DateFormat format = new SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH);
-					
-						System.out.println(first_day);
 						Date date = format.parse(last_day);
 						Date date2 = format.parse(first_day);	
 						long diff = date.getTime() - date2.getTime();
 						int days=(int)TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
+						if(days==0)
+							days=1;
 						int weeks=(days/7)+1;
 						int months=(days/30)+1;
 						float percent=Float.valueOf(sinolo)/days;
@@ -266,7 +273,6 @@ public class Main {
 					int siz=users.size();
 					bw.write("<td>"+sinolo_add/siz+"</td>");
 					bw.write("<td>"+sinolo_rem/siz+"</td>");
-					
 					bw.write("<td>"+sinolo_upd/siz+"</td>");
 					bw.write("</tr>");
 					bw.write("</table></br>");
@@ -310,7 +316,6 @@ public class Main {
 
 	}
 	private static String findLines(String result) {
-		
 		String[] bits = result.split(",");
 		String lastword = bits[1];
 		bits = lastword.split(" ");
